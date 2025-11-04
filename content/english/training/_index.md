@@ -3,23 +3,23 @@ weight: 8700
 linkTitle: "Workshops"
 title: "Workshops and Training Material"
 description: "Workshops and Training Material"
-titleIcon: "fa-solid fa-house-chimney"
+titleIcon: "fa-solid fa-chalkboard-user"
 categories: ["Training"]
 #tags: ["Content management"]
 ---
 
-{{< alert type="info" >}}
-**Next workshop:** coming soon ...
-{{< /alert >}}
-
 ## Local workshops
 ---
 
+<!--
 {{< treeview 
     display="tree"
 />}}
+-->
 
-## WestGrid training material
+{{< treeview />}}
+
+## WestDRI training material
 ---
 
 The training material from WestDRI (BC DRI and Prairies DRI groups, formerly known as WestGrid) webinars are available [online](https://training.westdri.ca/) and classified into different categories:
@@ -33,7 +33,7 @@ The training material from WestDRI (BC DRI and Prairies DRI groups, formerly kno
 ## Training material from the Alliance and its regional partners
 ---
 
-* [the Alliance](https://alliancecan.ca/en/training)
+* [DRAC](https://alliancecan.ca/en/training) - Now provided via [Explora](https://explora.alliancecan.ca/)
 * [ACENET](https://www.ace-net.ca/training.html)
 * [CAC](https://cac.queensu.ca/about_us/events-training/)
 * [Calcul Quebec](https://www.calculquebec.ca/en/academic-research-services/procedures/)
@@ -41,11 +41,11 @@ The training material from WestDRI (BC DRI and Prairies DRI groups, formerly kno
 * [SciNET](https://support.scinet.utoronto.ca/education/browse.php), [new link](https://education.scinet.utoronto.ca/course/index.php)
 * [SharcNET](https://training.sharcnet.ca/courses/)
 * [WestDRI](https://training.westdri.ca/)
+<!--
 * National Training [calendar](https://alliancecan.ca/en/services/advanced-research-computing/technical-support/training-calendar)
+-->
 ---
 
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Aug 28, 2024.
 -->

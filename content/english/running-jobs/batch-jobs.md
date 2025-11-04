@@ -5,6 +5,7 @@ title: "Running batch jobs on Grex"
 description: "Everything you need to know for running batch jobs on Grex."
 categories: ["Scheduler"]
 #tags: ["Configuration"]
+tags: ["SLURM"]
 ---
 
 ## Batch jobs 
@@ -28,9 +29,9 @@ There are certain scheduling policies in place to prevent the cluster from being
 The following policies are implemented on Grex:
 
 > - The default wall time is 3 hours (equivalent to: __-\-time=3:00:00__ or __-\-time=0-3:00:00__).
-> - The default amount of memory per processor (__-\-mem-per-cpu=__) is 256 mb. Memory limits are enforced, so an accurate estimate of memory resource (either in the form of __-\-mem=__ or __-\-mem-per-cpu=__) should be provided.
-> - The maximum wall time is 21 days on **compute** and **skylake** partitions, 14 days on **largemem** partition. 
-> - The maximum wall time is 3 days on the **gpu** partition.
+> - The default amount of memory per processor (__-\-mem-per-cpu=__) is 2500M. Memory limits are enforced, so an accurate estimate of memory resource (either in the form of __-\-mem=__ or __-\-mem-per-cpu=__) should be provided.
+> - The maximum wall time is 21 days on **genoa**, **skylake** partitions, on **largemem** and **genlm** partition. 
+> - The maximum wall time is 7 days on the **gpu** partition.
 > - The maximum wall time is 7 days on the **preempted** partitions: **stamps-b**, **livi-b** and **agro-b**.
 > - The maximum number of processor-minutes for all currently running jobs of a group without a RAC is 4 M.
 > - The maximum number of jobs that a user may have queued to run is 4000. The maximum size of an array job is 2000.
@@ -59,7 +60,7 @@ Any batch job is submitted with **sbatch** command. Batch jobs are usually shell
 | __-\-gpus=__            | -\-gpus=1            | Number of GPUs per job. |
 | __-\-time-__            | -\-time=0-8:00:00    | wall time in format DD-HH:MM:SS |
 | __-\-qos=__             | *                    | QOS by name (Not to be used on Grex!). |
-| __-\-partition=__       | -\-partition=compute | Partition name: **compute**, **skylake**, ... etc (**very much used on Grex!**). |
+| __-\-partition=__       | -\-partition=skylake | Partition name: **skylake**, ... etc (**very much used on Grex!**). |
 
 <!--
  * __-\-ntasks=__ : specifies number of tasks (MPI processes) per job.
@@ -86,14 +87,14 @@ or
 sbatch [+some options] myfile.slurm
 {{< /highlight >}}
 
-Some options like __-\-partition=compute__ could be invoked at submission time.
+Some options like __-\-partition=skylake__ could be invoked at submission time.
 
 Refer to the official SLURM [documentation](https://slurm.schedmd.com/documentation.html) and/or **man sbatch** for the available options. Below we provide examples for typical cases of SLURM jobs.
 
 ## Serial jobs 
 ---
 
-The simplest kind of job is a serial job when one compute process runs in a sequential fashion. Naturally, such job can utilize only a single CPU core: even large parallel supercomputers as a rule do not parallelize binary codes automatically. So, the CPU request for a serial job is always 1, which is the default;  the other resources can be wall time and memory. SLURM has two ways of specifying the later: memory per core (__-\-mem-per-cpu=__) and total memory per node (__-\-mem=__). It is more logical to use per-core memory always; except in case of the whole-node jobs when special value __-\-mem=0__ gives all the available memory for the allocated node. An example script (for 1 CPU, wall time of 30 minutes and a memory of 2500M) is provided below.
+The simplest kind of job is a serial job when one compute process runs in a sequential fashion. Naturally, such job can utilize only a single CPU core: even large parallel supercomputers as a rule do not parallelize binary codes automatically. So, the CPU request for a serial job is always 1, which is the default;  the other resources can be wall time and memory. SLURM has two ways of specifying the memory: memory per core (__-\-mem-per-cpu=__) and total memory per node (__-\-mem=__). It is more logical to use per-core memory always; except in case of the whole-node jobs when special value __-\-mem=0__ gives all the available memory for the allocated node. An example script (for 1 CPU, wall time of 30 minutes and a memory of 2500M) is provided below.
 
 {{< collapsible title="Script template for serial job" >}}
 {{< snippet
@@ -118,7 +119,7 @@ The next kind of job is multi-threaded, shared memory or single-node parallel jo
 Thus, from the point of view of the SMP/threaded jobs resources request, the following considerations are important:
 
 > - asking always only a single compute node and one task  (__-\-nodes=1 -\-ntasks=1__) job.
-> - asking for several CPU cores on it per job, up to the maximum number of CPU cores per node (__-\-cpus-per-task=N__) where N should not exceed the total physical cores available on the node. Depending on the partition, you may choose N up to 12 on the **compute** partition, up to 52 on the **skylake** partition, up to 40 on the **largemem** partition, ... etc.
+> - asking for several CPU cores on it per job, up to the maximum number of CPU cores per node (__-\-cpus-per-task=N__) where N should not exceed the total physical cores available on the node. Depending on the partition, you may choose N up to 52 on the **skylake** partition, up to 40 on the **largemem** partition, ... etc.
 > - making sure that the total memory asked for does not exceed the memory available on the node (refer to the section about node characteristics, [hardware](grex/#hardware) for more information).
 > - making sure that the code would use exactly the number of CPU cores allocated to the job, to prevent waste or congestion of the resources.
 
@@ -134,7 +135,7 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 For MKL it is __MKL_NUM_THREADS__, for Julia __-\-JULIA_NUM_THREADS__, for Java __-Xfixme__ parameter.
 
-{{< collapsible title="Script template for running a job on **compute** partition: using full node" >}}
+{{< collapsible title="Script template for running a job on **skylake** partition: using full node" >}}
 {{< snippet
     file="scripts/jobs/templates/run-smp-job-node-template.sh"
     caption="run-smp-job-node-template.sh"
@@ -142,11 +143,11 @@ For MKL it is __MKL_NUM_THREADS__, for Julia __-\-JULIA_NUM_THREADS__, for Java 
 />}}
 {{< /collapsible >}}
 
-Note that the above example requests whole node's memory with __-\-mem=0__ because the node is allocated to the job fully due to all the CPUs anyways. It is easier to use the __-\-mem__ syntax for SMP jobs because typically the memory is shared between threads (i.e., the amount of memory  used does not change with the number of SMP threads). Note, however, that the memory request should be reasonably "efficient" if possible. 
+Note that the above example requests the whole node's memory with __-\-mem=0__ because the node is allocated to the job fully due to all the CPUs anyways. It is easier to use the __-\-mem__ syntax for SMP jobs because typically the memory is shared between threads (i.e., the amount of memory  used does not change with the number of SMP threads). Note, however, that the memory request should be reasonably "efficient" if possible. 
 
-It is also possible to use a fraction of the node for running OpenMP job. Here is an example asking for 1 task with 4 threads on compute partition:
+It is also possible to use a fraction of the node for running OpenMP jobs. Here is an example asking for 1 task with 4 threads on compute partition:
 
-{{< collapsible title="Script template for running a job on **compute** partition: using a fraction of the node" >}}
+{{< collapsible title="Script template for running a job on **skylake** partition: using a fraction of the node" >}}
 {{< snippet
     file="scripts/jobs/templates/run-smp-job-partial-node-template.sh"
     caption="run-smp-job-partial-node-template.sh"
@@ -227,7 +228,7 @@ Here is an example for running MPI job (in this case, Quantum ESPRESSO) using 32
 />}}
 {{< /collapsible >}}
 
-However, in practice there are cases when layout should be more restrictive. If the software code assumes equal distribution of processes per node, the request should be __-\-nodes=N -\-ntasks-per-node=M__. A similar case is MPMD codes (Like [NWCHem](specific-soft/nwchem/) or GAMESS-US or OpenMolcas) that have some of the processes doing computation and some communication functions, and therefore requires at least two tasks running per each node.
+However, in practice there are cases when layout should be more restrictive. If the software code assumes equal distribution of processes per node, the request should be __-\-nodes=N -\-ntasks-per-node=M__. A similar case is MPMD codes (Like [NWCHem](/specific-soft/nwchem/) or GAMESS-US or OpenMolcas) that have some of the processes doing computation and some communication functions, and therefore requires at least two tasks running per each node.
 
 For some codes, especially for large parallel jobs with intensive communication between tasks there can be performance differences due to memory and interconnect bandwidths, depending on whether the same number of parallel tasks is compacted on few nodes or spread across many of them. Find an example of the job below.
 
@@ -334,7 +335,7 @@ module load StdEnv/2018.3
 
 Below is an arbitrarily chosen IMB benchmark result for MPI1 on Grex, the _sendrecv_ tests using two processes on two nodes with several MPI implementations (CC means MPI coming from the Compute Canada (now, the Alliance) stack, Grex means compiled locally on Grex).
 
-![](benchmarks/mpis-on-grex.png)
+![](/benchmarks/mpis-on-grex.png)
 
 You can see that differences in performance between OpenMPI 3.1.x from CC stack and Grex are minor for this benchmark, even without attempting any local tuning for the CC OpenMPI.
 
@@ -351,7 +352,5 @@ Since Spring 2021, Compute Canada has updated the default software stack on thei
 <!-- {{< treeview display="tree" />}} -->
 
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Aug 28, 2024. 
 -->

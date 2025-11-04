@@ -1,17 +1,17 @@
 ---
 weight: 5000
+linktitle: "Running Jobs"
 title: "Running jobs on Grex"
-linktitle: "Running jobs"
 description: "Everything you need to know about running jobs on Grex."
-titleIcon: "fa-solid fa-house-chimney"
+titleIcon: "fa-solid fa-person-running"
 categories: ["Software", "Scheduler"]
-#tags: ["Content management"]
+tags: ["SLURM"]
 ---
 
 ## Why running jobs in batch mode?
 ---
 
-There are many reasons for adopting a batch mode for running jobs on a cluster. From providing user's computations with fairness, traffic control to prevent resource congestion and resource trashing, enforcing organizational priorities, to better understanding the workload, utilization and resource needs for future capacity planning; the scheduler provides it all. After being long-time PBS/Moab users, we have switched to the [SLURM](https://slurm.schedmd.com/documentation.html) batch system since **December 2019** with the **Linux/SLURM update** [project](changes/linux-slurm-update).
+There are many reasons for adopting a batch mode for running jobs on a cluster. From providing user's computations with fairness, traffic control to prevent resource congestion and wasting, enforcing organizational priorities, to better understanding the workload, utilization and resource needs for future capacity planning; the scheduler provides it all. After being long-time PBS/Moab users, we have switched to the [SLURM](https://slurm.schedmd.com/documentation.html) batch system since **December 2019** with the **Linux/SLURM update** [project](changes/linux-slurm-update).
 
 ## Accounting groups
 ---
@@ -29,6 +29,8 @@ or
 {{< highlight bash >}}
 #SBATCH --account=def-sponsor2
 {{< /highlight >}}
+
+> **NEW** : Since Jun 19, 2024, for users that have more than one Account (that is, working for more than one research group), SLURM on Grex will no longer try to assume which of the accounts is default. Instead, sbatch and salloc would ask to provide the __–\-account=__ opton explicitly, list the possible accounts, and stop. Thus, for users that are members of more than one group, specifying the account as per above is now mandatory!
 
 ## QOSs
 ---
@@ -53,7 +55,7 @@ export SACCTMGR_FORMAT="cluster%9,user%12,account%20,share%5,qos%24,maxjobs%15,g
 sacctmgr show assoc where user=$USER format=$SACCTMGR_FORMAT
 {{< /highlight >}}
 
-* Partitions for pre-emptible jobs running on contributed hardware might be further limited, so that they cannot occupy the whole contributed hardware.
+* Partitions for preemptible jobs running on contributed hardware might be further limited, so that they cannot occupy the whole contributed hardware.
 
 * In cases when Grex is underutilized, but some jobs exist in the queue that can be run if not for the above-mentioned limits, we might relax the limits as a temporary "bonus".
 
@@ -71,7 +73,7 @@ The SLURM command that shows the state of nodes and partitions is **sinfo**:
 
 > * __sinfo__ to list the state of all the nodes (idle, down, allocated, mixed) and partitions. 
 > * __sinfo -\-state=idle__ to list all idle nodes. 
-> * __sinfo -p compute__ to list information about a given partition (**compute** in this case).
+> * __sinfo -p skylake__ to list information about a given partition (**skylake** in this case).
 > * __sinfo -p skylake --state=idle__ to list idle nodes on a given partition (**skylake** in this case).
 > * __sinfo -R__: to list all down nodes.
 > * __sinfo -R -N -o"%.12N %15T [ %50E ]"|uniq -c__: to list all down nodes and print the output in a specific format.
@@ -122,7 +124,7 @@ sbatch --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 --mem=40G --time=0-48:00
 and
 
 {{< highlight bash >}}
-salloc --nodes=1 --ntasks-per-node=4 --mem-per-cpu=4000M --x11 --partition=compute
+salloc --nodes=1 --ntasks-per-node=4 --mem-per-cpu=4000M --x11 --partition=skylake
 {{< /highlight >}}
 
 And so on. The options for batch jobs can be either in command line, or (perhaps better) in the special comments in the job file, like:
@@ -133,7 +135,7 @@ And so on. The options for batch jobs can be either in command line, or (perhaps
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=40G
 #SBATCH --time=0-48:00
-#SBATCH --partition=compute
+#SBATCH --partition=skylake
 {{< /highlight >}}
 
 Refer to the subsection for [batch jobs](running-jobs/batch-jobs) and [interactive jobs](running-jobs/interactive-jobs) for more information, examples of job scripts and how to actually submit jobs.
@@ -150,7 +152,7 @@ Refer to the subsection for [batch jobs](running-jobs/batch-jobs) and [interacti
 
 Without the above parameters, squeue would return all the jobs in the system. There is a shortcut __sq__ for __squeue -u $USER__
 
-**Cancelling jobs:**
+**Canceling jobs:**
 
 > * __scancel JobID__ (to cancel a job JobID)
 > * __echo "Deleting all the jobs by $USER" && scancel -u $USER__ (to cancel all your queued jobs at once).
@@ -160,27 +162,27 @@ Without the above parameters, squeue would return all the jobs in the system. Th
 
 To put hold some one or more jobs, use:
 
-* ```scontrol hold JobID``` (to put on hold the job JobID).
-* ```scontrol hold JobID01,JobID02,JobID03``` (to put on hold the jobs JobID01,JobID02,JobID03).
+> * ```scontrol hold JobID``` (to put on hold the job JobID).
+> * ```scontrol hold JobID01,JobID02,JobID03``` (to put on hold the jobs JobID01,JobID02,JobID03).
 
 To release them, use: 
 
-* ```scontrol release JobID``` (to release the job JobID).
-* ```scontrol release JobID01,JobID02,JobID03``` (to release the jobs JobID01,JobID02,JobID03).
+> * ```scontrol release JobID``` (to release the job JobID).
+> * ```scontrol release JobID01,JobID02,JobID03``` (to release the jobs JobID01,JobID02,JobID03).
   
 **Checking job efficiency:**
 
 The command __seff__ is a wrapper around the command __sacct__ that gives a friendly output, like the actual utilization of walltime and memory:
 
-*  ```seff JobID```
-*  ```seff -d JobID```
+> * ```seff JobID```
+> * ```seff -d JobID```
 
 Note that the output from the seff command is not accurate if the job was not successful.
 
 **Checking resource limits and usage for past and current jobs:**
 
-* ```sacct -j {JobID} -l```
-* ```sacct -u $USER -s {STARTDATE} -e {ENDDATE} -l --parsable2``` 
+> * ```sacct -j {JobID} -l```
+> * ```sacct -u $USER -s {STARTDATE} -e {ENDDATE} -l --parsable2``` 
 
 ### Getting info on accounts and priorities
 ---
@@ -216,10 +218,10 @@ sacctmgr list assoc account=def-someprofessor format=account,user,qos
 ## External links
 ---
 
- * SLURM [documentation](https://westgrid.github.io/trainingMaterials/tools/scheduling/)
- * [Running jobs](https://docs.alliancecan.ca/wiki/Running_jobs) on the Alliance (Compute Canada) clusters.
- * References for migrating from PBS to SLURM: [ICHEC](https://www.ichec.ie/academic/national-hpc/kay-documentation/pbs-slurm), [HPC-USC](https://hpcc.usc.edu/support/documentation/pbs-to-slurm/)
- * Westgrid training materials on SLURM: [Scheduling](https://westgrid.github.io/trainingMaterials/tools/scheduling/) 
+* SLURM [documentation](https://westgrid.github.io/trainingMaterials/tools/scheduling/)
+* [Running jobs](https://docs.alliancecan.ca/wiki/Running_jobs) on the Alliance (Compute Canada) clusters.
+* References for migrating from PBS to SLURM: [ICHEC](https://www.ichec.ie/academic/national-hpc/kay-documentation/pbs-slurm), [HPC-USC](https://hpcc.usc.edu/support/documentation/pbs-to-slurm/)
+* Westgrid training materials on SLURM: [Scheduling](https://westgrid.github.io/trainingMaterials/tools/scheduling/) 
 
 ---
 
@@ -228,7 +230,5 @@ Since the HPC technology is widely used by most universities and National labs, 
 {{< /alert >}}
 
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Sep 10, 2024.  
 -->

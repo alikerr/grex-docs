@@ -1,5 +1,5 @@
 ---
-weight: 9900
+weight: 9000
 linkTitle: "Deprecated pages"
 title: "Deprecated pages"
 description: "List of major changes on Grex: software and hardware updates."
@@ -9,6 +9,9 @@ banner: true
 bannerContent: "**Upcoming external network changes**"
 #categories: ["Functionalities"]
 #tags: ["Content management"]
+_build:
+ list: false
+ render: false
 ---
 
 ---
@@ -45,7 +48,5 @@ Please note that **yak** has **avx512** CPU architecture and if you have to use 
 ---
 
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Aug 28, 2024. 
 -->

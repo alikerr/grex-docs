@@ -7,7 +7,11 @@ titleIcon: "fa-solid fa-house-chimney"
 categories: ["Interfaces"]
 banner: true
 bannerContent: "Work in progress."
+draft: true
 #tags: ["Content management"]
+_build:
+ list: false
+ render: false
 ---
 
 ## Introduction
@@ -22,7 +26,5 @@ bannerContent: "Work in progress."
 <!-- {{< treeview display="tree" />}} -->
 
 <!-- Changes and update:
-* 
-*
-*
+* Last reviewed on: Apr 29, 2024.
 -->

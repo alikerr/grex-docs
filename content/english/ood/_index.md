@@ -3,9 +3,9 @@ weight: 7000
 linkTitle: "OpenOnDemand"
 title: "OpenOnDemand, HPC Portal"
 description: "All you need to know to start using OpenOnDemand Portal on Grex."
-titleIcon: "fa-solid fa-house-chimney"
+titleIcon: "fa-solid fa-cloud"
 categories: ["Software", "Interfaces"]
-#tags: ["Content management"]
+tags: ["Interactive", "Visualization"]
 ---
 
 ## Introduction
@@ -13,83 +13,271 @@ categories: ["Software", "Interfaces"]
 
 [OpenOnDemand](https://openondemand.org/ "OpenOnDemand") or __OOD__ for short, is an open source Web portal for High-Performance computing, developed at Ohio Supercomputing Center. OOD makes it easier for beginner HPC users to access the resources via a Web interface. OOD also allows for interactive, visualization and other Linux Desktop applications to be accessed on HPC systems via a convenient Web user interface.
 
-Since the end of __October 2021__, OpenOnDemand version 2 is officially in production  on Grex. 
+> * Since the end of __October 2021__, OpenOnDemand version 2 is officially in production on Grex.
+> * Since the beginning of __January 2023__, OpenOnDemand version 3 is officially in production on Grex.
+> * Since the beginning of __February 2025__, OpenOnDemand version 4 is officially in production on Grex.
 
-For more general OOD information, see the OpenOnDemand [paper](https://joss.theoj.org/papers/10.21105/joss.00622 "OpenOnDemand Paper")
+For more general OOD information, see the [OpenOnDemand paper](https://joss.theoj.org/papers/10.21105/joss.00622 "OpenOnDemand Paper")
 
 ## OpenOndemand on Grex 
 ---
 
-Grex's OOD instance runs on **aurochs.hpc.umanitoba.ca** . It is available only from UManitoba IP addresses -- that is, your computer should be on the UM Campus network to connect. 
+Grex's OOD instance runs on [**ood.hpc.umanitoba.ca**](https://ood.hpc.umanitoba.ca "Grex OOD") and requires the Alliance's Duo MFA to authenticate. The OOD instance is available only from UManitoba campus IP addresses -- that is, your computer should be on the UM Campus network to connect. 
 
-To connect from outside the UM network, please install and start __UManitoba Virtual Private Network__ [VPN](https://umanitoba.ca/computing/ist/connect/virtualpn.html). OOD relies on in-browser VNC sessions; so, a modern browser with HTML5 support is required; we recommend Google Chrome or Firefox and its derivatives (Firefox, for example).
+To connect from outside the UM network, please install and start __UManitoba Virtual Private Network__: [__UM VPN__](https://umanitoba.ca/information-services-technology/my-security/vpn-support "UofM VPN"). Note that you'd need the "VPN client" installation as described there; "VPN Gateway" will likely not work.
 
-**Connect to OOD using UManitoba [VPN](https://umanitoba.ca/computing/ist/connect/virtualpn.html):**
+OOD relies on in-browser VNC sessions; so, a modern browser with HTML5 support is required; we recommend Google Chrome or Firefox or Safari, and their derivatives.
 
-> - Make sure Pulse Secure VPN is connected
-> - Point your Web browser to [https://aurochs.hpc.umanitoba.ca](https://aurochs.hpc.umanitoba.ca) 
-> - Use your Alliance (Compute Canada) username and password to log in to Grex OOD.
+<!--
+OOD expects user accounts and directories on Grex to be already created. Thus, new users who want to work with OOD should first connect to Grex normally, via [SSH](connecting/ssh) shell at least once, to make the creation of account, directories, and quota complete. 
+-->
 
----
-
-{{< collapsible title="OpenOndemand login page" >}}
-![OpenOnDemand login page](ood/loginpage.png)
-{{< /collapsible >}}
-
-Once connected, you will see the following screen with the current Grex Message-of-the-day (MOTD):
-
-{{< collapsible title="File view on OpenOndemand web portal on Grex" >}}
-![OpenOnDemand Front Page](ood/frontpage.png)
-{{< /collapsible >}}
-
-OOD expects user accounts and directories on Grex to be already created. Thus, new users who want to work with OOD should first connect to Grex normally, via [SSH](connecting/ssh) shell at least once, to make the creation of account, directories, and quota complete. Also, OOD creates a state directory under users' ``/home`` (__/home/$USER/ondemand__) where it keeps information about running and completed OOD jobs, shells, desktop sessions and such. Deleting the __ondemand__ directory while a job or session is running would likely cause the job or session to fail.
+Also, OOD creates a state directory under users' ``/home`` (__/home/$USER/ondemand__) where it keeps information about running and completed OOD jobs, shells, desktop sessions and such. Deleting the __ondemand__ directory while a job or session is running would likely cause the job or session to fail.
 
 {{< alert type="warning" >}}
 It is better to leave the __/home/$USER/ondemand__ directory alone!
 {{< /alert >}}
 
-## Working with files and directories
+## Connect to OpenOndemand
+
+**Connect to OOD on campus:**
+
+> __1.__ Point your Web browser to [https://ood.hpc.umanitoba.ca](https://ood.hpc.umanitoba.ca) . This will redirect you to our Keycloack IDP screen.
+
+> __2.__ Use your Alliance/CCDB username and password to log in to Grex OOD.
+
+{{< collapsible title="Use your Alliance username and password to log in to Grex OOD." >}}
+![MFA second factor](/globus/grex-keycloak.png)
+{{< /collapsible >}}
+
+> __3.__ Provide Alliance's Duo second factor authentication when asked.
+
+**Connect to OOD off-campus, using UManitoba VPN:**
+
+> * Make sure UM Ivanti Secure VPN is connected. This may require using UManitoba MS Entra second factor authentication. Note that UManitoba uses a different MFA second factor than the Alliance! 
+
+> * Perform the steps __1-3__ as above.
+
+There are different options for the Alliance Duo MFA, like the 6 digits passcode generated by DUO mobile application:
+ 
+{{< collapsible title="Use your 6 digits passcode generated by DUO mobile app" >}}
+![MFA second factor](/mfa/mfa-duo-passcode.png)
+{{< /collapsible >}}
+
+or use the passcode generated by your __YubiKey__:
+
+{{< collapsible title="Use your YubiKey: touch and hold to receive the code." >}}
+![MFA second factor](/mfa/mfa-ubikey-passcode.png)
+{{< /collapsible >}}
+
+Or any other option by clicking on the menu "Other options".
+
+Once connected, you will see the following screen with the current Grex Message-of-the-day (MOTD):
+
+{{< collapsible title="OpenOndemand front page" >}}
+![OpenOnDemand Front Page](/ood/frontpage.png)
+{{< /collapsible >}}
+
+If you scroll dow, links to some applications will show up. They correspond to pinned applications and featured subset of all available applications. 
+
+## Navigating OOD Web portal interface
+
+There are several areas of interest on the OOD main webpage: the Dashboard bar on the top of the screen, various menu items (such as Files, Clusters, Jobs, Interactive Apps and Sessions). 
+
+> * __OpenOnDemand:__ main Open OnDemand dashboard.
+> * __Apps:__ link to the available OOD applications.
+> * __Files:__ file browser and related operations (copy, download, delete, ...).
+> * __Jobs:__ Status of queues, and a JobComposer interface to submit batch scripts.
+> * __Clusters:__ Status of Grex system and its SLURM partitions.
+> * __Interactive Apps:__ list of interactive applications.
+
+{{< collapsible title="OpenOndemand main menus" >}}
+![OpenOnDemand Front Page](/ood/ood-menus.png)
+{{< /collapsible >}}
+
+The use of the different menus is described in the following sections:
+
+### OOD main dashboard
+
+The OpenOnDemand main dashboard menu shows the message of the day which is similar to the message you see when connecting to Grex via SSH. It shows the url for the documentation and support email to contact in case you need help. Some other information are also added to the message of the day.
+
+If you scroll down from the front page, some icons with links to pinned applications and the subset of all available applications you have used recently:
+
+{{< collapsible title="Links to pinned interactive applications" >}}
+![Links to OpenOnDemand Interactive Apps](/ood/interactive-apps1.png)
+{{< /collapsible >}} 
+
+{{< alert type="warning" >}}
+Please note that the list of applications may change over time. The snapshots shown on this page are taken from the current list of the available applications on the OpenOnDemand portal while updating this page.
+{{< /alert >}}
+
+### Apps menu
+---
+
+This menu show links to the pinned applications like __Grex Simplified Desktop__ and a link to all application.
+
+{{< collapsible title="Link to pinned and all interactive applications" >}}
+![Links to OpenOnDemand Interactive Apps](/ood/pinned-apps.png)
+{{< /collapsible >}}
+
+### Files
 ---
 
 One of the convenient and useful features of OOD is its Files app that allows you to browse the files and directories
-across all Grex filesystems: __/home__, __/global/scratch__ and __/project__. 
+across all Grex filesystems: __/home__ and __/project__.
 
 {{< collapsible title="File view on OpenOndemand web portal on Grex" >}}
-![](ood/files.png)
+![](/ood/files.png)
 {{< /collapsible >}}
 
-You can also upload your data to Grex using this Web interface. Note that there are limits on uploads on the Web server (a few GBs) and there can be practical limits on download sizes as well due to internet connection speed and stability.
+The main features accessible vile the menu __Files__ are:
+
+* Access to storage: home and project directories.
+* Create new directories and files via the sub-menus _New File_ and _New Directory_
+* View and edit text files
+* Upload or download files via _Upload_ and _Download_ sub-menus.
+* Delete data: files or directories.
+* Copy or move data (files and directories).
+* Access to a path to a file or directory using the sub-menu _Copy Path_.
+* Open a terminal to a selected directory.
+* While working with the directories, you could view the content of the folder, rename the folder, delete the folder. It is also possible to download the folder as zip file.
+* While working with files, you can edit and change the text file, rename and delet files.
+
+The __Files__ interface also allows interaction with remote storage locations:
+
+* A link to [Globus](/data-transfer/globus/): this sub-menu start the Globus web interface in the current directory in __Files__ tab. For more information about globus, please have a look to the dedicated [page](/data-transfer/globus).
+* If you have configured any __rclone__ remotes, such as [MS OneDrive](/data-transfer/one-drive/) , NextCloud or an [Object Storage](/data-transfer/object-storage/) they will appear in Files menu along with your local Home and Project directories.
+
+
+{{< alert type="warning" >}}
+You can conveniently upload your data to Grex using this Web interface. However, there are limits on the size of the uploads on the Web server and there can be practical limits on download sizes as well due to internet connection speed and stability. OOD on Grex has a 10Gb limit for maximal size of files to be uploaded through the File menu. For larger amount of data, please use Globus or SSH/SCP/SFTP clients.
+{{< /alert >}}
+
+### Jobs
+---
+
+This menu gives access to Active Jobs; Jobs Metrics and Grex Job Composer:
+
+{{< collapsible title="Jobs menu view on OpenOndemand web portal on Grex" >}}
+![](/ood/jobs-menu.png)
+{{< /collapsible >}}
+
+**Active Jobs:**
+
+From this menu, you can access the list of current jobs on the queue. In other terms, anything you could get from running squeue from the command line. There is a field with the name __Filter__ where you can type _Queued_ or _Running_ if you want to filter the queued or running jobs. 
+
+{{< collapsible title="Active Jobs view on OpenOndemand web portal on Grex" >}}
+![](/ood/active-jobs.png)
+{{< /collapsible >}}
+
+**Jobs Metrics:**
+
+From this menu, you can access the fairshare of your group and other metrics about the efficiency of the jobs from your group for the last 7 days. Similar metrics can be obtained using sacct command with appropriate format and options.
+
+{{< collapsible title="Jobs Metrics view on OpenOndemand web portal on Grex" >}}
+![](/ood/fair-share.png)
+{{< /collapsible >}}
+
+**Grex Job Composer:**
+
+From this menu. it is possible to access a form with predefined or generic slurm templates to generate slurm scripts. It offers the options to customize, save and submit jobs. 
+
+{{< collapsible title="Job Composer view on OpenOndemand web portal on Grex" >}}
+![](/ood/job-composer.png)
+{{< /collapsible >}}
+
+This will be discussed in more details in another section.
+
+### Clusters
+---
+
+From this menu, you can access the current partitions status and the _Grex Cluster Cluster Status_. This later shows a summary and the overview of the reources and their state, like number of available nodes, number of available processes, numper of the GPUs available and number of jobs in running and queued state. 
+
+{{< collapsible title="Grex Cluster Cluster Status view on OpenOndemand web portal on Grex" >}}
+![](/ood/system-status.png)
+{{< /collapsible >}}
+
+From the menu _Partitions Status_, one can see the state of each partition where it shows the name of the partition, number of free nodes, number of free cores and memory. 
+
+{{< collapsible title="Partitions Status view on OpenOndemand web portal on Grex" >}}
+![](/ood/partition-status.png)
+{{< /collapsible >}}
+
+A variant of the above information is available via command line by running the command __partition-list__ from any login node.
+
+{{< alert type="info" >}}
+There is also a link to start a terminal from OOD session.
+{{< /alert >}}
+
+### Interactive Apps
+---
+
+From this menu, one can access different applications that classified into 3 categories:
+
+> * __Desktops__ like Grex Desktop and Grex Desktop Simplified. 
+> * __GUI Apps__ like Matlab, Gaussview, Ovito, Stata, ... etc. 
+> * __Servers__ like Jupyter, Code Server and RStudio.
+
+A lisf of ineractive applications is accessible from the top menu __Interactive Apps__ as shown in the following screenshot:
+
+{{< collapsible title="OpenOndemand interactive applications" >}}
+![OpenOnDemand Interactive Apps](/ood/interactive-apps0.png)
+{{< /collapsible >}}
+
+{{< alert type="warning" >}}
+Some applications, like Stata and Gaussview may show up on the snapshots displayed on this page but not under your session. These applications are configured to show up only if you have access to a particular POSIX group that restricts access to the software.
+{{< /alert >}}
 
 ## Customized OOD apps on Grex
 ---
 
-The OOD Dashboard menu, __Interactive Apps__, shows interactive applications. This is the main feature of OOD, it allows interactive work and visualizations, all in the browser. These applications will run as SLURM Jobs on Grex compute nodes. Users can specify required SLURM resources such as time, number of cores and partitions.
+The OOD Dashboard menu, __Interactive Apps__, shows interactive applications. This is the main feature of OOD, it allows interactive work and visualizations, all in the browser. These applications will run as SLURM Jobs on Grex compute nodes. Users can specify required SLURM resources such as time, number of cores, wall time, partition name, ... etc.
 
 {{< collapsible title="OpenOndemand applications on Grex" >}}
-![](ood/applications.png)
+![](/ood/interactive-app.png)
 {{< /collapsible >}}
+
+After filling all the requirements and launching the Apps, the Apps jobs are submitted via a button __Launch__. The corresponding jobs appear in the __Interactive Sessions__ tab. They can be used, monitored, connected to, and terminated as needed.
+
+There are numerous supported _applications_ in OpenOnDemand on Grex. These applications fall into two broad categories: Virtual Desktop apps (the ones delivering a Linux Desktop with some GUI software via NoVNC) and Servers that are delivered through a Web Proxy. A prominent example of a Server app is Jupyter Notebook or Jupyter Lab. Some Apps such as Matlab or Rstudio exists both as a Linux Desktop GUI and a Server version.
+
+> We keep actively developing the OOD Web Portal, and the list below may change over time as we add more popular applications or remove less used ones!
 
 As for now, the following applications are supported:
 
-> - Linux Desktops in VNC
-> - Matlab GUI in VNC
-> - GaussView GUI in VNC
-> - Jupyter Notebooks servers
+| Application | Type | Availability | Notes|
+|-----| :-----------:|:-----------:|-----------|
+| Linux Desktop | NoVNC Desktop | Generally available | - |
+| GaussView  | NoVNC Desktop | Licensed users only | - |
+| Matlab |  NoVNC Desktop | Generally available | - | 
+| Matlab Server | Server  | Generally available | - |
+| JupyterLab Server | Server | Generally available | Comes for SBEnv and CCEnv | - | 
+| RStudio Server| Server | Generally available |  Comes for SBEnv and CCEnv | - |
+| CodeServer | Server | Generally available | - |
+| Gnuplot |  NoVNC Desktop | Generally available | - |
+| Grace |  NoVNC Desktop | Generally available | - |
+| MetaShape Pro | NoVNC Desktop | Licensed users only | - |
+| RELION | NoVNC Desktop | Generally available | - |
+| STATA | NoVNC Desktop | Licensed users only | - |
+| Feko | NoVNC Desktop | Licensed users only | | - | 
+| Ovito | NoVNC Desktop | Generally available | - | 
 
-As with regular SLURM jobs, it is important to specify SLURM partitions for them to start faster. Perhaps the __test__ partition for Desktop is the best place to start interactive Desktop jobs, so it is hardcoded in the Simplified Desktop item.
+> Note that only Apps available (licensed) to your research group will be visible in your group members' OOD interface.
 
+As with regular SLURM jobs, it is important to specify SLURM partitions for them to start faster. Perhaps the __test__ partition for Desktop is the best place to start interactive Desktop jobs, so it is hardcoded in the __Simplified Desktop__ item.
+
+<!--
 The following links are added to OOD:
 
-> - From the menu __Jobs__, there is a link __Grex SLURM Queues State__ that shows a summary of running and pending jobs. It runs a modified version of the script **grex-summarize-queue** that is accessible from any login node.
+> - From the menu __Jobs__, there is a link __Grex SLURM Queues State__ that shows a summary of running and pending jobs. The same information can be accessed from any login node by running the __grex-summarize-queue__ command.
+> - From the menu __Clusters__, there is a link __Grex SLURM Node State__ to get a summary of allocated and idle nodes by partition. The same information can be accessed from any login node by running the __slurm-nodes-state__ command.
+-->
 
-> - From the menu __Clusters__, there is a link __Grex SLURM Node State__ to get a summary of allocated and idle nodes by partition. The same information can be accessed from any login node by running a custom script:__slurm-nodes-state__
- 
 ---
 
-<!-- {{< treeview display="tree" />}} -->
+{{< treeview />}}
 
 <!-- Changes and update:
-* 
-*
-*
+
+* Last reviewed on: Apr 29, 2024. 
 -->

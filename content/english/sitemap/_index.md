@@ -1,5 +1,5 @@
 ---
-weight: 9500
+weight: 9900
 title: "Grex Documentation - Sitemap"
 linktitle: "Sitemap"
 description: "Sitemap."
@@ -17,7 +17,5 @@ categories: ["Miscellaneous"]
 ---
 
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Aug 28, 2024. 
 -->

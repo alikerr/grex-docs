@@ -1,12 +1,24 @@
 ---
 weight: 1
-title: "Unofficial Grex User Guide"
-linktitle: "Unofficial Grex User Guide"
+title: "Grex HPC User Guide"
+linktitle: "Grex HPC User Guide"
 description: "Documentation for Grex"
 #categories: []
+titleIcon: "fa-solid fa-house"
+banner: false
 ---
 
-![HPCC](hpcc/grex-room-2020.png)
+![HPCC](/hpcc/grex-room-2025.png)
+
+[Hardware and software](grex) --- [Access and Usage Conditions](access) --- [Quick Start Guide](start-guide) --- [Storage](storage) --- [Connect and Transfer data](connecting) --- [Software and Applications](software) --- [Software notes](specific-soft) --- [Running jobs](running-jobs) --- [Workshops and Training](training) --- [OpenOnDemand](ood) --- [How to get help"](support)
+
+## Traditional Territories Acknowledgement
+---
+
+The University of Manitoba campuses and research spaces are located on original lands of Anishinaabeg, Ininiwak, Anisininewuk, Dakota Oyate, Dene and Inuit, and on the National Homeland of the Red River Métis.
+We respect the Treaties that were made on these territories, we acknowledge the harms and mistakes of the past, and we dedicate ourselves to move forward in partnership with Indigenous communities in a spirit of Reconciliation and collaboration.
+
+For more information, please visit the [University of Manitoba Traditional Territories Acknowledgement page](https://umanitoba.ca/indigenous/traditional-territories-acknowledgements).
 
 {{< intro
   introtitle="How to use this website?"
@@ -57,21 +69,9 @@ description: "Documentation for Grex"
       "triggerexcept": ["nohover"],
       "onbeforechange": "toggleSidebar(false,true);toggleExtendMenu(true);"
     },{
-      "title": "Taxonomies",
+    "title": "Taxonomies",
       "intro": "The taxonomies button provides access to the several taxonomies of the website.<br><i>NB: This button is only visible if at least one taxonomy exists.</i>",
       "element": "getFirstVisibleElement('#taxonomiesSelector, #taxonomiesSelectorExtend');",
-      "position": "left",
-      "onbeforechange": "toggleSidebar(false,true);toggleExtendMenu(true);"
-    },{
-      "title": "Multilingual",
-      "intro": "The multilingual button provides access to the several translations of the current page.<br><i>NB: This button is only visible if a translation page exists for the current page. Only the English version is available at this time.</i>",
-      "element": "getFirstVisibleElement('#langsSelector, #langsSelectorExtend');",
-      "position": "left",
-      "onbeforechange": "toggleSidebar(false,true);toggleExtendMenu(true);"
-    },{
-      "title": "Versionning",
-      "intro": "The versionning button provides other available versions of the website.",
-      "element": "getFirstVisibleElement('#versionsSelector, #versionsSelectorExtend');",
       "position": "left",
       "onbeforechange": "toggleSidebar(false,true);toggleExtendMenu(true);"
     },{
@@ -104,15 +104,6 @@ description: "Documentation for Grex"
 }
 {{< /intro >}}
 
-### Territory acknowledgement  
----
-
-The University of Manitoba campuses are located on original lands of Anishinaabeg, Cree, Oji-Cree, Dakota and Dene peoples, and on the homeland of the Métis Nation. We respect the [Treaties](https://communities4families.ca/outdoor-play/land-acknowledgement/) that were made on these territories, we acknowledge the harms and mistakes of the past, and we dedicate ourselves to move forward in partnership with Indigenous communities in a spirit of reconciliation and collaboration.
-
----
-
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Aug 28, 2024. 
 -->

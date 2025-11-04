@@ -4,8 +4,16 @@ linkTitle: "Priroda"
 title: "Running Priroda on Grex"
 description: "Everything you need to know for running Priroda on Grex."
 categories: ["Software", "Scheduler"]
+banner: true
+bannerContent: "__Work in progress.__"
+draft: true
 #tags: ["Configuration"]
+_build:
+ list: false
+ render: false
 ---
+
+**Note: Priroda in not available yet on the new environment. This documentation was written for the old environment.**
 
 ## Introduction
 ---
@@ -15,9 +23,9 @@ Priroda is a fast parallel relativistic DFT and _ab-initio_ code for molecular m
 ## User Responsibilities and Access
 ---
 
-The code is free for academic users, but is not open source. It is distributed on request by the Author, Dr. Dimitri N. Laikov.
+The code is free for academic users but is not open source. It is distributed on request by the Author, Dr. Dimitri N. Laikov.
 
-To access the Priroda code on Grex, the prospective users have to send us (support@tech.alliancecan.ca) a free-form email confirming that  they have read and agreed to abide by the following conditions:
+To access the Priroda code on Grex, the prospective users should send us (support@tech.alliancecan.ca) a free-form email confirming that  they have read and agreed to abide by the following conditions:
 
 **Conditions for the Priroda code access on Grex:**
 
@@ -56,7 +64,7 @@ An archive of old Priroda documentation is here [Priroda old docs from KNC](/man
 
 Priroda is MPI-parallelized. The parallel efficiency varies on the method used and the kind of calculation (energies, geometry optimizations or analytical hessians) performed. Pure GGA DFT calculations are quite fast and tightly coupled, and it makes sense to use a single node with a few tasks per node, or a few nodes, as in the example below. RI-MP2 calculations would benefit from more massively parallel calculations, spanning several nodes. 
 
-It makes no sense to ask more than 4000mb per task. 
+It makes no sense to ask more than 4000 mb per task. 
 
 {{< collapsible title="Script example for running PRIRODA on Grex" >}}
 {{< snippet
@@ -82,7 +90,5 @@ There are some simple scripts and utilities in the __$PRIRODA/contrib__ director
 <!-- {{< treeview display="tree" />}} -->
 
 <!-- Changes and update:
-* 
-*
-*
+* Last reviewed on: Apr 26, 2024.
 -->

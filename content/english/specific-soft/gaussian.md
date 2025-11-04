@@ -10,7 +10,7 @@ categories: ["Software", "Scheduler"]
 ## Introduction
 ---
 
-[Gaussian 16](http://gaussian.com/ "Gaussian") is a comprehensive suite for electronic structure modeling using __ab initio__, DFT and semi-empirical methods. A list of Gaussian 16 features can be found [here](http://gaussian.com/g16glance/ "Gaussian Features").
+[Gaussian 16](http://gaussian.com/ "Gaussian") is a comprehensive suite for electronic structure modeling using __ab-initio__, DFT and semi-empirical methods. A list of Gaussian 16 features can be found [here](http://gaussian.com/g16glance/ "Gaussian Features").
 
 ## User Responsibilities and Access
 ---
@@ -42,7 +42,13 @@ module load gaussian/g16.c01
 
 To load the module and access the binaries, you will first get access as per above. Also, our Gaussian license span is less than Compute Canada's support contract, so there are fewer versions available. Use ```module spider gaussian``` to see what is available on Grex.
 
-After a Gaussian module is loaded, the GaussView software also becomes available (provided you have connected with X11 support, perhaps using X2Go) as follows:
+After a Gaussian module is loaded, the GaussView software also becomes available. GaussView can be used via [OOD](ood). There is already an application that will show up if you have access to Gaussian. Here is a snapshot of Gaussview using OOD application:
+
+{{< collapsible title="Gaussview Application: snapshot" >}}
+![Gaussview Application](/ood/gaussview-snap.png)
+{{< /collapsible >}}
+
+The binary is called _gv_:
 
 {{< highlight bash >}}
 gv
@@ -70,8 +76,14 @@ The viewer should not be used to run production calculations on Grex login nodes
 A simplified job script **sbg16** is available (after loading of the g16 module) for automatic generation and submission of SLURM Gaussian jobs.
 
 {{< highlight bash >}}
-sbg16 input.gjf -ppn 12 -mem 40000mb -time 8:00:00
+sbg16 input.gjf -ppn 8 -part skylake -mem 40000mb -time 12:00:00
 {{< /highlight >}}
+
+The script takes input file name (must have the _.gjf_ extension), which must be the first argument, and a couple of parameters:
+ * _-ppn N_ : number of threads. Cannot be more than physical number of threads per node on the selected partition
+ * _-part name_ : a SLURM partition to run the job in . 
+ * _-mem MemSpec_ : total memory per job. The MemSpec can include usual units, without spaces (1000mb, 3gb , etc). 
+ * _-time TimeSpec_ : walltime requested for the job, in SLURM format (1-00:00 or 24:00:00 give one day).
 
 ## Using NBO
 ---
@@ -88,13 +100,11 @@ module spider nbo
 ---
 
 * [Gaussian](https://gaussian.com/man/) documentation.
-* [Gaussian](https://docs.alliancecan.ca/wiki/Gaussian) page on Compute Canada wiki.
+* [Gaussian](https://docs.alliancecan.ca/wiki/Gaussian) page on the Alliance wiki.
 * Gaussian [error messages](https://docs.alliancecan.ca/wiki/Gaussian_error_messages).
 
 ---
 
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Aug 28, 2024.
 -->

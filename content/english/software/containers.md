@@ -2,18 +2,33 @@
 weight: 1600
 linkTitle: "Containers"
 title: "Containers for Software"
-description: "Everything you need to know before to use containers and singularity."
+description: "Everything you need to know before to use Singularity containers"
 categories: ["Software", "Applications"]
-#tags: ["Configuration"]
+tags: ["Containers", "Singularity", "Docker", "Podman"]
 ---
 
 ## Introduction
 ---
 
-Linux Containers are means to isolate software dependencies from the base Linux operating system. On Grex, we support the [Singularity](https://sylabs.io/guides/3.5/user-guide/) container system, now developed by a company called SyLabs. Several other Linux container engines exist, most notably [Docker](https://www.docker.com) which is a very popular tool in DevOps community. Presently Docker containers cannot be directly supported on shared HPC systems like Grex. However, with help of Singularity, it is possible to run Docker images from [DockerHub](https://hub.docker.com/), as well as native Singularity images from other repositories, such as [SingularityHub](https://singularity-hub.org/) and [SyLabsCloud](https://cloud.sylabs.io/home).
+Linux Containers are means to isolate software dependencies from the base Linux operating system (OS). Several different Linux container engines exist, most notably [Docker](https://www.docker.com) which was first to emerge as the most popular tool in the DevOps community. 
 
-## Using Singularity on Grex
+Since then, a lot of work had been done by major Linux players like Google, RedHat and others to develop an open standard for container runtimes, which developed based on Docker, [OCI](https://opencontainers.org/).
+
+There are HPC-specific container engines/runtimes that offer similar or equivalent functionality but allow for easier integration with shared Linux HPC systems. At the time of writing, the most widely used is the [Singularity](https://sylabs.io/guides/3.11/user-guide/) container system, developed by a company called SyLabs, and its fork, a Linux Foundation project called [Apptainer](https://apptainer.org/). 
+They are [compatible](https://apptainer.org/docs/user/latest/singularity_compatibility.html) with each other. Singularity/Apptainer provides functionality for running most Docker images by converting them to the Singularity Image format (SIF). However, Singularity/Apptainer own format is [not completely OCI-compatible](https://apptainer.org/docs/user/latest/docker_and_oci.html#differences-and-limitations-vs-docker), so there exists Docker images that would not work properly. 
+
+Finally, recent developments in Linux Kernel namespaces allowed to happen such projects as "rootless Docker" and "rootless [Podman](https://podman.io)" which are more suitable for HPC systems than the original Docker implementation which requires privileged access to the Linux system.
+
+On Grex, Sylabs Singularity-CE is supported on local SBEnv software stack, while Apptainer is supported as part of the ComputeCanada/Alliance CCEnv stack. At the time of writing, these engines can be used largely interchangeably.
+
+{{< alert type="info" >}}
+ __New:__ There is also support for rootless Podman on Grex, for the use cases that require full OCI-compatibility. 
+{{< /alert >}}
+
+## Using Singularity from SBEnv on Grex
 ---
+
+A brief introduction on [getting started with Singularity](https://docs.sylabs.io/guides/latest/user-guide/quick_start.html) can be useful to get started. You will not need to install Singularity on Grex since it is already provided as a module.
 
 Start with __module spider singularity__; it will list the current version. Due to the nature of container runtime environments, we update Singularity regularly, so the installed version is usually the latest one. Load the module (in the default Grex environment) by the following command:
 
@@ -24,29 +39,42 @@ module load singularity
 With **singularity** command, one can list singularity commands and their options:
 
 {{< highlight bash >}}
-module load singularity
 singularity help
 {{< /highlight >}}
 
-A brief introduction on [getting started with Singularity](https://sylabs.io/guides/3.5/user-guide/quick_start.html) can be useful to get started. You will not need to install Singularity on Grex since it is already provided as a module.
+To execute an application within the container, do it in the usual way for that application, but prefix the command with __singularity exec image_name.sif__ or, if the container has a valid _entry point_, execute it with __singularity run image_name.sif__. 
 
-To execute an application within the container, do it in the usual way for that application, but prefix the command with ''singularity exec image_name.sif". For example, to run R on an R script, using a container named R-INLA.sif:
+{{< highlight bash >}}
+singularity run docker://ghcr.io/apptainer/lolcow
+{{< /highlight >}}
+
+In the example above, Singularity downloads a Docker image from a registry, and runs it instantly. It is advisable, to avoid getting banned by container registries for massive downloads off a single HPC system, to "pull" or "build" containers first as images, and then "run" and "exec" them locally.
+
+{{< highlight bash >}}
+singularity pull lolcow_local.sif docker://ghcr.io/apptainer/lolcow
+# The above should create a local image lolcow_local.sif 
+# Lets run it with singularity
+singularity run lolcow_local.sif
+{{< /highlight >}}
+
+For another example, to run R on an R script, using an existing container image named R-INLA.sif (INLA is a popular R library installed in the container):
 
 {{< highlight bash >}}
 singularity exec ./R-INLA.sif R --vanilla < myscript.R
 {{< /highlight >}}
  
-Quite often, it is useful to provide the containerized application with data residing on a shared HPC filesystem such as __/home__ or __/global/scratch__. This is done via [bind mounts](https://sylabs.io/guides/3.5/user-guide/bind_paths_and_mounts.html). Normally, the container **bind-mounts** $HOME, /tmp and the current working directory. On Grex to bind the global Lustre filesystem the following __-B__ option should be used:
+Quite often, it is necessary to provide the containerized application with data residing outside of the container image. For running HPC jobs, the data usually resides on a shared filesystem such as __/home__ or __/project__. This is done via [bind mounts](https://docs.sylabs.io/guides/latest/user-guide/bind_paths_and_mounts.html). Normally, the container **bind-mounts** $HOME, /tmp and the current working directory. It is possible to mount a subdirectory, such as _$PWD/workdir_, or an entire filesystem such as _/project_. 
+Example below bind-mounts a __./workdir__ folder relative to the current path. The folder must exist before being bind-mounted.
 
 {{< highlight bash >}}
-singularity exec -B /sbb/scratch:/global/scratch ./R-INLA.sif R --vanilla < myscript.R
+singularity exec -B `pwd`/workdir:/workdir ./R-INLA.sif R --vanilla < myscript.R
 {{< /highlight >}}
 
 In case you do not want to mount anything to preserve the containers' environment from any overlapping of data/code from say $HOME, use the __-\-containall__ flag.
 
-Some attention has to be paid to Singularity's local cache and temporary directories. Singularity caches the container images it pulls and Docker layers under __$HOME/.singularity__. Containers can be large, in tens of gigabytes, and thus they can easily accumulate and exhaust the users' storage space quota on $HOME. Thus, users might want to set the __SINGULARITY_CACHEDIR__ and __SINGULARITY_TMPDIR__ variables to some place under their __/global/scratch__ space.
+Some attention should be paid to Singularity's local cache and temporary directories. Singularity caches the container images it pulls and Docker layers under __$HOME/.singularity__. Containers can be large, in tens of gigabytes, and thus they can easily accumulate and exhaust the users' storage space quota on $HOME. Thus, users might want to set the __SINGULARITY_CACHEDIR__ and __SINGULARITY_TMPDIR__ variables to some place under their __/global/scratch__ space.
 
-For example, to change the location of __SINGULARITY_CACHEDIR__ and __SINGULARITY_TMPDIR__, one might run:
+For example, to change the location of __SINGULARITY_CACHEDIR__ and __SINGULARITY_TMPDIR__, before building the singularity image, one might run:
 
 {{< highlight bash >}}
 mkdir -p /global/scratch/$USER/singularity/{cache,tmp}
@@ -54,19 +82,46 @@ export SINGULARITY_CACHEDIR="/global/scratch/$USER/singularity/cache"
 export SINGULARITY_TMPDIR="/global/scratch/$USER/singularity/tmp"
 {{< /highlight >}}
 
-before building the singularity image.
+{{< alert type="warning" >}}
+In the above example, the directory refers to __/global/scratch__ which is not available on grex for now. Therefore, we recommend to replace the path __/global/scratch/$USER/singularity__ by a location under your project directory __/home/$USER/projects/def-professor/$USER/singularity__ where _professor_ refers to the user name of your sponsor.
+{{< /alert >}}
 
-## Getting and building Singularity images
+### Getting and building Singularity images
 ---
 
-The commands **singularity build** and **singularity pull** would get Singularity images from DockerHub, SingularityHub or SyLabsCloud. Images can also be built from other images, and from recipes. A recipe is a text file that specifies the base image and post-install commands to be performed on it.
+The commands __singularity build__ and/or __singularity pull__ would get pre-built Singularity images from DockerHub, SingularityHub, or SyLabsCloud. “pulling” images does not require elevated permissions (that is, sudo). There are several kinds of container repositories from which containers can be pulled. These repositories are distinguished by the URI string (library://, docker://, oras://, etc.).
+It is also possible to convert a local Podman image (using the oci-archive:// URI ) into a Singularity image. Refer to the Podman section of this document below.
 
-## Singularity with GPUs
+{{< highlight bash >}}
+module load singularity
+# Building Ubuntu image using Sylabs Library
+singularity build ubuntu_latest0.sif library://ubuntu
+# or using DockerHub, this will create ubuntu_latest.sif
+singularity pull docker://ubuntu:latest
+# or, using a local definition and --fakeroot option
+singularity build --fakeroot My_HPC_container.sif Singularity.def
+# or, using a suitable local OCI image from Podman
+singularity build busybox.sif oci-archive://busybox.tar
+{{< /highlight >}}
+
+Singularity (SIF) images can also be built from other local images, local “sandbox” directories, and from recipes. A [Singularity recipe or definition file](https://apptainer.org/docs/user/main/definition_files.html) is a text file that specifies the base image and post-install commands to be performed on it. However, Singularity-CE requires _sudo_ (privileged) access to build images from recipes, which is not available for users of HPC machines. There are two solutions to this problem.
+
+ * Using remote build on Sylabs cloud with _\-\-remote_ option. This requires [setting up a free account on Sylabs and getting access key](https://cloud.sylabs.io/builder). 
+ * Using Singularity-CE or Apptainer (see below) with _\-\-fakeroot_ option.
+
+> Make sure you understand licensing and intellectual property implications before using remote build services!
+
+The _fakeroot_ method appears to be easier and does not require an external account. As of the time of writing, both Apptainer and Singularity-CE support the _fakeroot_ build method. On Grex, there could be differencences between running Apptainer _build_ in an interactive job and on a login node. Running builds in a _salloc_ job is preferred also because login nodes do limit memory and CPU per session.
+
+
+### Singularity with GPUs
 ---
 
-Use the __-\-nv__ flag to singularity run/exec/shell commands. Naturally, you should be on a node that has a GPU, in an interactive job. NVIDIA provides many pre-built Docker and Singularity container images on their ["GPU cloud"](https://ngc.nvidia.com/), together with instructions on how to pull them and to run them. These should work on Grex without much changes.
+Add the __-\-nv__ flag to __singularity__ _run_ / _exec_ / _shell_ commands for the container to be able to access NVidia GPU hardware.
+Naturally, your job should be on a node that has a GPU to use GPUs . Check out our [Running Jobs](running-jobs/slurm-partitions) documentation to find out which partitions have the GPU hardware.
+NVIDIA provides many pre-built Docker and Singularity container images on their [GPU cloud](https://ngc.nvidia.com/), together with instructions on how to pull them and to run them. NVidia's NGC Docker images should, as a rule, work on HPC machines with Singularity without any changes.
 
-## OpenScienceGrid CVMFS
+### Singularity with OpenScienceGrid CVMFS
 ---
 
 We can run Singularity containers distributed with OSG CVMFS which is currently mounted on Grex's CVMFS. The containers are distributed via CVMFS as unpacked directory images. So, the way to access them is to find a directory of interest and point singularity runtime to it. The directories will then be mounted and fetched automatically. The repository starts with __/cvmfs/singularity.opensciencegrid.org/__. Then you'd need an idea from somewhere what you are looking for in the subdirectories of the above-mentioned path. An example (accessing, that is, exploring via __singularity shell__ command, Remoll software distributed through OSG CVMFS by __jeffersonlab__):
@@ -76,24 +131,164 @@ module load singularity
 singularity shell /cvmfs/singularity.opensciencegrid.org/jeffersonlab/remoll\:develop
 {{< /highlight >}}
 
-A partial description of what is present on OSG CVMFS is available [here](https://support.opensciencegrid.org/support/solutions/articles/12000024676-docker-and-singularity-containers).
+It looks like the list of what is present on the OSG CVMFS is on GitHub: [OSG GitHub docker images](https://github.com/opensciencegrid/cvmfs-singularity-sync/blob/master/docker_images.txt) .
+
+## Using Apptainer from CCEnv on Grex
+---
+
+The Alliance's (formerly ComputeCanada) software stack now provides Apptainer modules in the two latest Standard Environments, _StdEnv/2020_ and _StdEnv/2023_. Most recent Apptainer versions (1.2.4 and older) do not require "suexec" and thus can be used off the CVMFS as usual. The only caveat would be to first unload any "singularity" or "apptainer" modules from other software stacks by _module purge_. Apptainer on the CCEnv stack is installed in suid-less mode.
+
+The following commands show how to run the image from the previous example _/R-INLA.sif_:
+
+{{< highlight bash >}}
+module purge
+module load CCEnv
+module load arch/avx512 
+module load StdEnv/2023
+module load apptainer
+# testing if apptainer command works
+apptainer version
+# running the basic example
+apptainer run docker://ghcr.io/apptainer/lolcow
+{{< /highlight >}}
+
+Similarly to Singularity, you will need to bind mount the required data directories for accessing data outside the container. 
+The same best practices mentioned above for Singularity (pulling containers beforehand, controlling the cache location) equally apply for the Apptainer. The environment variables for Apptainer should be using APPTAINER_ instead of SINGULARITY_ prefixes.
+
+### Building apptainer images with "fakeroot"
+
+Apptainer supports building of SIF images from recipes without __sudo__ access using __-\-fakeroot__ option where available.
+
+On Grex, it can be used as in the following example:
+
+{{< highlight bash >}}
+module purge
+module load CCEnv
+module load StdEnv/2023
+module load apptainer
+# testing if apptainer command works
+apptainer version
+# build an image, INLA, from a local Singularity.def recipe
+# --fakeroot makes the build possible without elevated access
+apptainer build --fakeroot INLA.sif Singularity.def
+{{< /highlight >}}
+
+The resulting SIF image should be compatible with either Singularity-CE or Apptainer runtimes.
+
+## Using Podman from SBEnv on Grex
+---
+
+[Podman](https://podman.io/) modules are now provided under the default Grex SBEnv environment. On Grex, Podman is configured as _rootless_. Podman is meant to be used by experienced users for jobs that cannot be executed as regular binaries, or through Singularity due to OCI requirements. Grex is an HPC systems, so it is expected that users would be using Podman to run compute jobs rather than persistent services (including and not limited to databases, and network services). Thus, Podman jobs and/or running Podman containers that deemed to be inappropriate for HPC may be terminated without notice.
+
+> It is not recommended to run Podman on login nodes; it should be run only on compute nodes (e.g. using __sbatch__ or __salloc__). 
+
+The only allowed use on login nodes is to pull images before actually starting a job.
+
+Access to the Podman runtime is through a module. Due to the nature of the container runtime environment, we strive to update Podman regularly, so in most cases, the latest installed version must be used:
+
+{{< highlight bash >}}
+module load podman
+podman version
+podman run --rm docker.io/godlovedc/lolcow
+{{< /highlight >}}
+
+The above command would pull a container image and run it. 
+
+
+### Getting and Managing Podman images
+---
+
+When using Podman to run a job, we suggest to manually pre-download the required image to avoid wasting time during the job. 
+Grex is hosting a Docker Registry proxy/cache locally to improve the download performance, and for avoiding rate limits that can be imposed by various container registries.
+
+{{< highlight bash >}}
+module load podman
+podman pull <REQUIRED_IMAGE>
+{{< /highlight >}}
+
+The command **podman pull _image_name_** would get Podman images from a container registry. 
+
+Images can also be built from other images, or from containerfiles (e.g. Dockerfiles) using the command **podman build _Containerfile_**. 
+A _containerfile_ is a text "recipe" that specifies the base image and commands to be run on it. Podman's recipes are compatible with Docker's _Dockerfiles_.
+Below is an example of building a container from a source tree of a package called Chemprop. The Dockerfile is provided by the authors.
+
+{{< highlight bash >}}
+# Lets try to build a local container from chemprop source directory
+module load podman
+# change the directory to the source tree where Dockerfile is located
+cd chemprop-1.7.1
+podman  build -t chemprop .
+# this creates a local container image "localhost/chemprop  latest"
+{{< /highlight >}}
+
+>Podman, as configured on Grex, by default stores all pulled and locally built images inside the Slurm TMPDIR directory that is local to the node. This means that images will be deleted when the job finishes or get cancelled. 
+
+To list the local _images_, users can take advantage of the following Podman commands:
+
+{{< highlight bash >}}
+# list images
+podman image ls
+# delete an unnecessary image
+podman image rm <IMAGE_ID>
+{{< /highlight >}}
+
+However, the local images as listed by _image ls_ are local to the compute node they were pulled or created. That is, they are not visible on other nodes, or even the same node when the job ends, and would have to be pulled again or built again from the Containerfile.
+
+To avoid rebuilding the same image every time the job runs, users can take advantage of **podman save** and **podman load** commands that allow for storing the local container as a single image file. Note that these files are large, and it is the user's responsibility to manage their Podman images (delete the old/unused ones)):
+
+{{< highlight bash >}}
+# after building an image locally, save it to a file
+podman save --format=oci-archive -o ${HOME}/my-local-image.tar <LOCALLY_BUILT_IMAGE>
+# when running a job that needs that image, load it
+podman load -i ${HOME}/my-local-image.tar
+{{< /highlight >}}
+
+Note that it is also possible to convert podman OCI archives into Singularity _.sif_ images as described above, using _oci-archive://my-local-image.tar_ syntax for the source image.
+
+### Podman with User Namespaces
+
+OCI containers may contain multiple users in the container. For example, a Jupyter container would have the _jovian_ user, a Mambaforge container would have the user _mambauser_, etc., in addition to the _root_ user inside container. To properly run such contains with rootless Podman on HPC, an explicit switch __\-\-userns=keepid__ with corresponding userID and groupID mappings has to be provided to Podman.
+
+{{< highlight bash >}}
+# run a container with userID mapping for a user with id 1000
+# while binding the home directory of the "outside" user
+podman run -it --userns=keep-id:uid=1000,gid=1000 -v ${HOME}:${HOME} <REQUIRED_IMAGE>
+{{< /highlight >}}
+
+Since the user and group ID in arbitrary containers are not known _a priori_, it is sometimes needed to use the _id_ command when running the container to get the user and group IDs first.
+
+Please refer to the Podman documentation on [User namespace options](https://docs.podman.io/en/v4.4/markdown/options/userns.container.html) for more information.
+
+Namespaces [may cause issues](https://www.redhat.com/en/blog/supplemental-groups-podman-containers) when bind-mounting folders not owned by the user's primary group. Unfortunately, such folders are all the folders of the sponsored users on the _/project_ filesystems, that require access to supplemental groups to be accessible.
+If you encounter such issues when using containers with __\-\-keep-id__, please add __\-\-annotation run.oci.keep_original_groups=1__ to the _podman_ command line options.
+
+
+### Podman with GPUs
+---
+
+Use the __-\-device=nvidia.com/gpu=all__ flag to the _podman_ command when running a podman container that needs GPU hardware. 
+Naturally, your job should be on a node that has a GPU to use GPUs . Check out our [Running Jobs](running-jobs/slurm-partitions) documentation to find out which partitions have the GPU hardware.
+NVIDIA provides many pre-built Docker container images on their [NGC Cloud](https://ngc.nvidia.com/), together with instructions on how to pull and run them. 
+Many software developers also put images to various container registries, such as DockerHub or Quay.io, or distribute the sources of containers along with Dockerfiles; all these can be used, but "your mileage may vary". 
+Podman would usually run Docker containers without changes to the command line parameters.
+It is a good idea to run a test job for a given container and use __nvidia-smi__ command on the node the job runs on to check whether the image is able to utilize the GPU(s).
+
+---
 
 ## External links
 ---
 
  * [Singularity/Sylabs homepage](https://sylabs.io)
- * [Singularity documentation](https://docs.alliancecan.ca/wiki/Singularity) (The Alliance documentation)
- * [Westgrid Singularity tutorial](https://westgrid.github.io/trainingMaterials/materials/singularity20210526.pdf), a recording can be found [here](https://westgrid.github.io/trainingMaterials/tools/virtual/)
+ * [Apptainer homepage](https://apptainer.org/)
+ * [Podman homepage](https://podman.io/)
+ * [Apptainer documentation on the Alliance Wiki](https://docs.alliancecan.ca/wiki/Apptainer)
  * [Docker Hub](https://hub.docker.com)
- * [Singularity Hub](https://ngc.nvidia.com/)
- * [Sylabs Cloud](https://cloud.sylabs.io/home)
- * [NVIDIA NGC cloud](https://ngc.nvidia.com/)
- * [OSG Helpdesk for Singularity](https://support.opensciencegrid.org/support/solutions/articles/12000024676-docker-and-singularity-containers)
+ * [RedHat Quay.io Hub](https://quay.io/search)
+ * [Sylabs Cloud](https://cloud.sylabs.io/builder)
+ * [NVIDIA NGC Cloud](https://ngc.nvidia.com/)
 
 <!-- {{< treeview display="tree" />}} -->
 
 <!-- Changes and update:
-* 
-*
-*
+* Last revision: Jan 24, 2024. 
 -->

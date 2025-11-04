@@ -9,7 +9,8 @@
 
 # Load the modules: 
 
-module load gcc/4.8 ompi/4.1.1 orca/5.0.2
+module load arch/avx512  gcc/13.2.0  openmpi/4.1.6
+module load orca/6.0.1
 
 # Assign the input file:
 
@@ -38,8 +39,6 @@ echo " "                      >> ${ORCA_IN}
 
 echo "Starting run at: `date`"
 
-ORCAEXEC=`which orca`
-
-${ORCAEXEC} ${ORCA_IN} > ${ORCA_OUT}
+${MODULE_ORCA_PREFIX}/orca ${ORCA_IN} > ${ORCA_OUT}
 
 echo "Program finished with exit code $? at: `date`"

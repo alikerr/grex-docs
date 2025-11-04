@@ -4,56 +4,102 @@ linkTitle: "Data sharing"
 title: "Data sharing"
 description: "Everything you need to know about sharing data on Grex."
 categories: ["Information"]
-banner: true
-bannerContent: "Work in progress."
-#tags: ["Configuration"]
+#banner: true
+#bannerContent: "Work in progress."
+tags: ["Configuration", "Storage"]
 ---
 
-## Data sharing
+## Data Sharing
 ---
 
-Sharing of accounts login information (like passwords or SSH keys) is strictly forbidden on Grex, as well as on most of the HPC systems. There is a mechanism of data/file sharing that does not require sharing of the accounts. To access each other's data on Grex, the UNIX groups and permissions mechanism can be used as explained below. 
+By default, data on Grex are owned by the user and are not accessible to other Grex users or to external parties.
 
-<!--
-We use a Westgrid exlpanation because Grex is still using Westgrid accounts and groups database, so the text below is still relevant.
--->
+In research, it’s often necessary to share datasets or code within a research group or with collaborating groups. This documentation explains how to share data stored on a specific HPC system, in this case, Grex. Sharing data outside the HPC system can be done through other methods, such as Globus or MS OneDrive.
 
-## UNIX groups
+{{< alert type="warning" >}}
+* __How to not share data:__ Sharing account credentials is strictly forbidden. Similarly, making data "world-accessible" (open to all users) is discouraged.
+{{< /alert >}}
+
+> * Sharing account login information (like passwords or SSH keys) is strictly prohibited on Grex and most other HPC systems.
+> * Making a directory universally accessible—especially with write permissions (e.g., using the Linux/Unix +rwx or 777 file mode)—is risky, as it allows anyone on the system to not only read but potentially delete the entire directory.
+
+There is a secure mechanism for data sharing that doesn’t involve sharing account credentials. To access each other’s data on Grex, you should use UNIX groups and permissions, or ideally, Access Control Lists (ACLs) for more granular control over data access permissions.
+
+## UNIX Groups and File Ownership
 ---
 
-Each UNIX (or Linux) file or directory is owned by an individual user and also by a group (which may be composed of several users). The permission to access files and directories can be restricted to just the individual owning the file, to the group that owns the file, or access can be unrestricted.
+First, let’s review how permissions work on a Linux system.
 
-By default, each account (username) is set up with an associated UNIX group containing just that single username. So, even if you have set permission for your UNIX group to access files, they are still not being shared with anyone else. You can override the default by using the __chmod__ command to set unrestricted read access to your files. However, if you need more specific control over access, you can ask us to create a special UNIX group containing the usernames of other researchers with whom you want to share data by sending an email to support (__support@tech.alliancecan.ca__) to ask that a new UNIX group be created for you. Include a list of the users who should be added to that group. One user should be designated as the authority for the group. If a request to join the group is made from someone else, we will ask the designated authority for the permission to add the new researcher to the group. The group name must be of the format __wg-xxxxx__ where __xxxxx__ represents up to five characters. Please indicate your preference for a group name in your email. 
+Each UNIX (or Linux) filesystem object (such as a file or directory) is owned by an individual user (the owner) and a group (which may include multiple users). Access permissions can be set for the owner, the group, and "others" (all other users on the system). You can view ownership and permissions for objects in the current directory with the command ```ls -la```.
 
-The group will be set up on the Grex system. This may take a day or two to set up. You will get an email whenever you are added or removed from a UNIX group.
-
-Now that you have a __wg-xxxxx__ UNIX group created, you can set up the data sharing with it, by setting the permissions as described below.
-
-The directory you wish to share should be owned by the group and permitted to the group. For example:
+Depending on the filesystem (e.g., __/project__, __/home__, or, on Alliance systems, __/scratch__), group ownership is assigned either to the user’s personal group or to the Principal Investigator’s (PI's) group. For example, on /home, where users own their data, the listing might look like this:
 
 {{< highlight bash >}}
-chgrp -R wg-group dir
-chmod g+s dir
+[someuser@yak Data]$ ls -la
+total 328408
+drwxrwxr-x  2 someuser someuser        75 Aug  9  2023 .
+drwxrwxr-x 25 someuser someuser      4096 Oct 18 10:46 ..
+-rw-r--r--  1 someuser someuser  64479232 Aug  9  2023 file.txt
+-rw-r--r--  1 someuser someuser 271805449 Aug  9  2023 Calgary_Adult_Skull_Atlas.mnc
 {{< /highlight >}}
 
-You must ensure that there is access to parent directories as well.
-
-A directory and all the files in it can be permitted to the group as follows:
+On __/project__, where a group-based hierarchy exists, ls will show group ownership assigned to the PI’s default allocation group, as follows:
 
 {{< highlight bash >}}
-chmod -R g+rX /global/scratch/dirname
+someuser@yak Data]$ ls -la
+total 328420
+drwxrwsr-x 3 someuser def-somePI      4096 Oct 21 14:43 .
+drwxrwsr-x 3 someuser def-somePI      4096 Oct 21 14:35 ..
+-rw-r--r-- 1 someuser def-somePI   64479232 Oct 21 14:35 file.txt
+-rw-r--r-- 1 someuser def-somePI  271805449 Oct 21 14:35 Calgary_Adult_Skull_Atlas.mnc
+drwxrwsr-x 2 someuser def-somePI       4096 Oct 21 14:43 Docker
 {{< /highlight >}}
 
-To set access for the /global/scratch/dirname directory and all its subdirectories. Note the uppercase X in the command. This will set x permissions on the subdirectories (needed for others to list the directories) as well as regular execute permission on executable files.
+In UNIX/Linux, permissions are associated with group ownership. To adjust access, you need to change both ownership and permissions. You can override defaults using the ```chmod``` command to modify file permissions, and ```chown``` or ```chgrp``` to change owner and group, respectively. This assumes the required group (or user) already exists on the system.
 
-If you want them to allow other members to not only read files in the shared directory "dir", but also permit write access to allow them to create and change files in that directory, then all members in the group must add a line:
+Sharing within the PI’s group is straightforward using ```chgrp``` and ```chmod``` with the __def-somePI__ group. These __def-somePI__ groups are automatically created based on CCDB group memberships and are available for each group on Grex, forming the directory structure on the __/project__ filesystem. To make a directory accessible to a group, a user can modify ownership masks as follows:
 
-umask 007
+{{< highlight bash >}}
+# Allow read, write, and search access for all members of the def-somePI group.
+
+chmod g+rwX Calgary_Adult_Skull_Atlas.mnc Docker
+{{< /highlight >}}
+
+In some cases, you may need more precise control over access—perhaps only a subset of the PI’s group should access a dataset, or you need to grant access to users from multiple research groups (more than one PI). In such cases, a new UNIX group is required. Grex and Alliance systems receive group and user information from the CCDB. Thus, the group must be requested by the PI. 
+
+### Requesting a Data-sharing Group
+
+A Principal Investigator (PI) can request the creation of a special UNIX group to facilitate data sharing with other researchers. To set up a group, the PI should email support at support@tech.alliancecan.ca, including a list of users to be added to the group. Please designate one user as the authority/manager for the group. If someone requests to join the group later, we will ask the designated authority for approval before adding the new member.
+
+The group name should follow the format wg-xxxxx, where xxxxx represents up to five characters. Indicate your preferred group name in the email.
+
+The group will be set up on the Grex system, which may take a day or two. You will receive an email notification whenever you are added to or removed from a UNIX group. Once your wg-xxxxx UNIX group is created, data sharing permissions can be configured using either chown / chmod commands or Linux Access Control Lists (ACLs), as described below.
+
+To share a directory with the group, set group ownership and permissions on the directory. For example:
+
+{{< highlight bash >}}
+chgrp -R wg-group ./dirname
+chmod g+s ./dirname
+{{< /highlight >}}
+
+> Ensure that the parent directories also have the minimally necessary permissions (the search permission __X__) to allow access. 
+
+To grant read and access permissions to all files in a directory, use the following:
+
+{{< highlight bash >}}
+chmod -R g+rX ./dirname
+{{< /highlight >}}
+
+The uppercase __X__ in this command sets execute permissions on subdirectories (allowing group members to list contents) and on executable files.
+
+If group members need both read and write access in the shared directory (to create and modify files), each member should add the following line to their __~/.bashrc__ or __~/.cshrc__ file:
+
+```umask 007```
 
 to the __~/.bashrc__ or __~/.cshrc__ file in their respective home directories. Furthermore, you must add write permission to the shared directory itself:
 
 {{< highlight bash >}}
-chmod -R g+rwX dir
+chmod -R g+rwX dirname
 {{< /highlight >}}
 
 which would allow read and write access to the directory dir and all its files and subdirectories.
@@ -61,12 +107,66 @@ which would allow read and write access to the directory dir and all its files a
 ## Linux ACLs
 ---
 
-On the Lustre filesystem (__/global/scratch/$USER__), it is possible to use Linux access control lists (ACLs) which offer more fine-grained control over access than UNIX groups. Compute Canada's [Sharing Data](https://docs.alliancecan.ca/wiki/Sharing_data "Sharing data") documentation might be relevant, with one caution: on Grex, there is no project layout as exists on Compute Canada clusters.
+On most modern Linux filesystems, such as Lustre FS used for Grex’s __/project__, Linux Access Control Lists (ACLs) provide more fine-grained access control than traditional UNIX groups. ACLs allow flexible permissions by decoupling file ownership from access rights, enabling access control for multiple users or groups without changing file ownership. This flexibility makes ACLs the preferred method for organizing data sharing.
 
-An example setting of ACL command, to allow for "search" access of the top directory to a group wg-abcdf, presumably with some of the directories under it being shared by a UNIX group:
+The Alliance’s [Sharing Data](https://docs.alliancecan.ca/wiki/Sharing_data "Sharing data")a documentation describes using ACLs, and Grex’s /project filesystem has a similar hierarchical structure. Grex’s __/home__ uses a NFSv4 FS, which has its own ACL syntax, not compatible with Linux ACLs. Generally, data sharing is recommended under __/project__, while $HOME remains private to each user.
+
+Two main commands control ACLs on files and directories:
+
+ * ```getfacl```: displays the current ACL settings.
+ * ```setfacl```: modifies ACL settings.
+
+The access modes are similar to ```chmod```'s symbolic codes:
+
+ * ```r``` for read
+ * ```w``` for write
+ * ```X``` for execute/search permissions on directories
+
+Since ACLs are independent of file ownership, they allow setting permissions for individual users, multiple users, group or multiple groups. For example, to share a file or directory under __/project__:
 
 {{< highlight bash >}}
-setfacl -m g:wg-abcdf:X /global/scratch/$USER
+# share a single file for full access
+setfacl -m u:otherusers:rwX Calgary_Adult_Skull_Atlas.mnc 
+
+#share a directory for reading and search, but first  make it the Default setting, i.e. for current and future files there
+
+setfacl -d -m u:otheruser:rX /home/someuser/projects/def-somePI/Shared_data
+setfacl -R -m u:otheruser:rX /home/someuser/projects/def-somePI/Shared_data
+
+# share a directory for full access  based on a Unix group wg-abcde
+
+setfacl -d -m g:wg-abcde:rwX /home/someuser/projects/def-somePI/Shared_data
+setfacl -R -m g:wg-abcde:rwX /home/someuser/projects/def-somePI/Shared_data
+ 
+{{< /highlight >}}
+
+> Note that the above example refers to /home and uses the symlink to project. This will not work for data sharing between different PIs because $HOME is private. Thus, to refer to the shared data, "real" paths on __project__ of the form /project/PI-GIDnumber/Shared_data must be used.
+
+### Data sharing across Research Groups
+
+Linux ACLs described above are the way to share data across research groups. 
+
+When sharing data between different PIs, residing under separate __/project__ directories, "search" access must be granted at the top project directory level. For example, to allow search access for group __wg-abcde__ on a PI's project directory:
+
+{{< highlight bash >}}
+setfacl -m g:wg-abcde:X /project/123456/
+{{< /highlight >}}
+
+Note that the real, absolute path to the project must be used rather than a $HOME-based symbolic link. 
+To get the absolute path to the PI's project, use ```diskusage_report``` tool.
+
+### Managing ACLs: viewing and removing 
+
+Use ```getfacl``` to display current ACL settings. 
+Use ```setfacl -b``` to remove ACLs when they are no longer needed:
+
+{{< highlight bash >}}
+# Display current ACLs for a directory
+getfacl /home/someuser/projects/def-somePI/Shared_data
+
+# Remove all ACLs from a directory
+setfacl -bR /home/someuser/projects/def-somePI/Shared_data
+
 {{< /highlight >}}
 
 ## External links
@@ -76,12 +176,12 @@ setfacl -m g:wg-abcdf:X /global/scratch/$USER
 
 * [ACLs](https://www.geeksforgeeks.org/access-control-listsacl-linux/ "Access Control Lists in Linux")
 
+* [Alliance documentation on the same topic](https://docs.alliancecan.ca/wiki/Sharing_data/en)
+
 ---
 
 <!-- {{< treeview display="tree" />}} -->
 
 <!-- Changes and update:
-* 
-*
-*
+* Last reviewed on: Apr 29, 2024.
 -->
